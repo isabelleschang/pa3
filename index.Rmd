@@ -1,0 +1,73 @@
+---
+title: "Programaming Assignment 3"
+date: "Last updated `r Sys.time()`"
+author: "Isabelle Chang"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, 'setup', message=FALSE, echo=FALSE}
+#message=false: code is still echoed, but message is gone
+library(tidyverse)
+library(languageR)
+```
+## Tidy data
+```{r, 'load and tidy english dataset', out.width="100%", message=FALSE, echo=FALSE}
+tidy_english <- english %>%
+  filter(AgeSubject=="young" & NounFrequency != 0 & VerbFrequency != 0) %>%
+  #filter(NounFrequency < 500 & VerbFrequency < 500) %>%
+  select(Word, NounFrequency, VerbFrequency, WordCategory) %>%
+  arrange(NounFrequency, VerbFrequency, Word)
+
+tidy_english
+```
+
+## Descriptive Statistics
+```{r, 'tidy stats', echo=FALSE}
+tidy_english %>%
+  summarize(noun_avg=mean(NounFrequency), noun_sd=sd(NounFrequency))
+
+tidy_english %>%  
+  summarize(verb_avg=mean(VerbFrequency), verb_sd=sd(VerbFrequency))
+```
+
+## Plot:
+
+```{r, 'plot with outliers', out.width="100%", message=FALSE, echo=FALSE}
+mod1 <- lm(VerbFrequency ~ NounFrequency, data = tidy_english)
+
+plot1 <- tidy_english %>%
+  ggplot() +
+  aes(x=NounFrequency, y=VerbFrequency) +
+  geom_point() +
+  geom_smooth(method=lm, formula="y~x")
+
+plot1
+```
+
+### To account for outliers, I removed data points with noun or verb frequencies above 15000. The descriptive statistics and plot are as follows:
+```{r, 'stats and plot without outliers', out.width='100%', message=FALSE, echo=FALSE}
+
+tidier_english <- tidy_english %>%
+  filter(VerbFrequency < 15000 & NounFrequency < 15000)
+
+tidier_english
+
+tidier_english %>%
+  summarize(verb_avg=mean(VerbFrequency), verb_sd=sd(VerbFrequency))
+
+mod2 <- lm(VerbFrequency ~ NounFrequency, data = tidier_english)
+
+plot2 <- tidier_english %>%
+  ggplot() +
+  aes(x=NounFrequency, y=VerbFrequency) +
+  geom_point() +
+  geom_smooth(method=lm, formula="y~x")
+
+plot2
+```
+
+## Analysis
+
+The plots suggest that the relationship between a word's verb and noun frequencies is nonlinear. Data points fan out from the calculated line of best fit rather than congregating in a blob-like form around the line.
